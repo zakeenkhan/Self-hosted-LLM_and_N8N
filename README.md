@@ -4,21 +4,6 @@ A fully self-hosted AI chatbot pipeline running **n8n** (workflow automation) an
 
 ---
 
-## 📸 Project Overview
-
-| Step | Screenshot |
-|------|-----------|
-| n8n Running Locally | ![n8n Running Locally](Simple%20Run.JPG) |
-| Local LLM (Ollama) | ![Local LLM - Ollama](Local%20LLM.JPG) |
-| Ollama Models | ![Ollama Models](Olama%20models.JPG) |
-| n8n Workflow Active | ![n8n Workflow Live](LiveRun.JPG) |
-| Chatting via n8n | ![Chatting App](ChattingApp.JPG) |
-| ngrok Tunnel | ![ngrok Tunnel](ngrok.JPG) |
-| Production View | ![Production](production.JPG) |
-| Lovable App Chat | ![Lovable App Chat](ChattingLovableAPP.JPG) |
-
----
-
 ## 🏗️ Architecture
 
 ```
