@@ -37,7 +37,22 @@ User (Browser / Lovable App)
 
 ## 📋 Step-by-Step Setup
 
-### Step 1: Install & Run n8n Locally
+### Step 1: Install Node.js & npm
+
+n8n requires Node.js and npm. Install them first.
+
+1. Download and install **Node.js** from [https://nodejs.org](https://nodejs.org) (LTS version recommended). npm is included with Node.js.
+2. Verify the installation by opening **PowerShell** or **Command Prompt** and running:
+
+```bash
+npm -v
+```
+
+This should print the npm version number. If it does, Node.js and npm are installed correctly.
+
+---
+
+### Step 2: Install & Run n8n Locally
 
 n8n is a free, open-source workflow automation tool. Running it locally gives you the **free forever** plan with full API access and no execution limits.
 
@@ -57,29 +72,30 @@ n8n will start on `http://localhost:5678`. Open it in your browser and complete 
 
 ---
 
-### Step 2: Install Ollama & Download the LLM
+### Step 3: Install Ollama & Download the LLM
 
-[Ollama](https://ollama.com) lets you run large language models locally on your PC — no paid APIs needed.
+[Ollama](https://ollama.com) lets you run large language models locally on your PC — no paid APIs needed. Follow the setup shown in the screenshot below.
+
+1. Download and install **Ollama** from [https://ollama.com](https://ollama.com)
+2. After installation, open a terminal and pull the model:
 
 ```bash
-# Install Ollama (download from https://ollama.com)
-
 # Pull the Gemma 4 27B model
 ollama pull gemma4:26b
 
-# Verify it's running
+# Verify the model is available
 ollama list
 ```
 
-![Local LLM - Ollama](Local%20LLM.JPG)
+![Local LLM Setup](Local%20LLM.JPG)
 
 ![Ollama Models](Olama%20models.JPG)
 
-> **Why local LLM?** Zero API costs, full privacy, works offline. The `gemma4:26b` model runs entirely on your hardware.
+> **Why local LLM?** Zero API costs, full privacy, works offline. The `gemma4:26b` model runs entirely on your hardware — no OpenAI, no Anthropic, no paid APIs.
 
 ---
 
-### Step 3: Build the n8n Workflow
+### Step 4: Build the n8n Workflow
 
 1. Open n8n at `http://localhost:5678`
 2. Create a **New Workflow**
@@ -101,7 +117,7 @@ The workflow JSON is available in [`Workflow.json`](Workflow.json) — you can i
 
 ---
 
-### Step 4: Test Locally
+### Step 5: Test Locally
 
 Send a test request to your local n8n webhook:
 
@@ -117,35 +133,89 @@ You should receive a JSON response from the local LLM.
 
 ---
 
-### Step 5: Expose n8n to the Internet with ngrok
+### Step 6: Install ngrok & Set Up Environment Variable
 
 To make your local n8n accessible from the internet (for the Lovable app or any external client), use **ngrok** — a free tunneling tool.
 
+**6a. Download & Install ngrok**
+
+1. Go to [https://ngrok.com](https://ngrok.com) and sign up for a free account.
+2. Download ngrok for Windows.
+3. After downloading, you need to add ngrok to your **system environment variable** so you can run it from any terminal:
+   - Go to the folder where ngrok is installed and **copy the full path** (e.g., `C:\Users\YourName\Downloads\ngrok`).
+   - Open **System Properties** → **Environment Variables** → under **System variables**, find `Path` → **Edit** → **New** → paste the ngrok folder path → **OK**.
+4. Verify ngrok is installed globally by opening a **new** PowerShell or Command Prompt:
+
 ```bash
-# Install ngrok (download from https://ngrok.com)
+ngrok -v
+```
 
-# Authenticate (one-time, free account)
+This should print the ngrok version. If it does, ngrok is available system-wide.
+
+**6b. Authenticate ngrok**
+
+Go to your [ngrok dashboard](https://dashboard.ngrok.com/get-started/your-authtoken), copy your **authtoken**, and paste it in your terminal:
+
+```bash
 ngrok config add-authtoken YOUR_AUTH_TOKEN
+```
 
-# Tunnel to your local n8n instance
+This is a one-time setup — ngrok is now authenticated on your machine.
+
+**6c. Start the ngrok Tunnel**
+
+Open a **new terminal** and run:
+
+```bash
 ngrok http 5678
 ```
 
-ngrok will give you a public URL like `https://xxxx-xx-xx.ngrok-free.app` that forwards all traffic to `localhost:5678`.
+> ⚠️ **Important:** Check which port n8n is running on. By default it's `5678`, but if n8n started on a different port (e.g., `5679`), you must use that port instead: `ngrok http 5679`.
+
+ngrok will display a **forwarding URL** like:
+
+```
+https://a957-144-79-56-247.ngrok-free.app → http://localhost:5678
+```
+
+Copy this URL — you'll need it in the next step.
 
 ![ngrok Tunnel](ngrok.JPG)
 
-> **Why ngrok?** It creates a secure public URL for your local server — no need to configure port forwarding, firewall rules, or buy a domain. The free tier is sufficient for development and demos.
+**6d. Set the WEBHOOK_URL and Start n8n**
+
+Open **another terminal** (keep the ngrok terminal running) and set the `WEBHOOK_URL` environment variable to your ngrok URL, then start n8n:
+
+```powershell
+# PowerShell
+$env:WEBHOOK_URL="https://a957-144-79-56-247.ngrok-free.app"; n8n start
+```
+
+This tells n8n to use the ngrok public URL for webhook URLs instead of `localhost`, so external apps (like Lovable) can reach your workflows.
+
+> ⚠️ **CRITICAL REMINDER — WEBHOOK_URL Changes Every Restart:**
+>
+> Every time you **turn off your PC** or **restart ngrok**, the ngrok URL changes (you get a new unique URL). When this happens:
+> 1. Stop the current n8n workflow.
+> 2. Start ngrok again: `ngrok http 5678` — copy the **new** forwarding URL.
+> 3. Update the `WEBHOOK_URL` in your terminal:
+>    ```powershell
+>    $env:WEBHOOK_URL="https://YOUR-NEW-NGROK-URL.ngrok-free.app"; n8n start
+>    ```
+> 4. Update the webhook URL in your **n8n workflow** (Webhook node → update the test/production URL).
+> 5. Update the API endpoint URL in your **Lovable app** to match the new ngrok URL.
+>
+> **Both n8n and Lovable must be updated with the new URL every time it changes.**
 
 ---
 
-### Step 6: Connect to Lovable App for Live Production
+### Step 7: Connect to Lovable App for Live Production
 
 [Lovable](https://lovable.dev) is an AI-powered web app builder. Connect it to your n8n webhook via the ngrok URL:
 
 1. In your Lovable app, set the API endpoint to your ngrok URL:
    ```
-   https://xxxx-xx-xx.ngrok-free.app/webhook/zakeen
+   https://YOUR-NGROK-URL.ngrok-free.app/webhook/zakeen
    ```
 2. Send POST requests with the user's message in the body:
    ```json
